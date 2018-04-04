@@ -10,5 +10,55 @@
         e.preventDefault();
         responseContainer.innerHTML = '';
         searchedForText = searchField.value;
+
+        $.ajax({
+            url: `https://api.unsplash.com/search/photos?page=1&query=${searchedForText}`,
+            headers: {
+                Authorization: 'Client-ID c46b209e2144c86bea43b2e50432b25aa2e8cabc32ecb0bdd949b853361db660'
+            }
+        }).done(addImage);
+
+        const articleRequest = new XMLHttpRequest();
+        articleRequest.onload = addArticles;
+        articleRequest.open('GET', `http://api.nytimes.com/svc/search/v2/articlesearch.json?q=${searchedForText}&api-key=0b8fecc045a24ff9bba7454ff972d3bc`);
+        articleRequest.send();
     });
+
+    function addImage(images) {
+        let htmlContent = '';
+
+        if (images && images.results && images.results[0]) {
+            // Random result image
+            const image = images.results[Math.floor(Math.random() * images.results.length)];
+
+            htmlContent =
+                `<figure>
+                    <img src="${image.urls.regular}" alt="${searchedForText}">
+                    <figcaption>${searchedForText} by ${image.user.name}</figcaption>
+                </figure>`;
+
+            responseContainer.insertAdjacentHTML('afterbegin', htmlContent);
+        } else {
+            htmlContent = '<div class="error-no-image">No images available</div>';
+        }
+    }
+
+    function addArticles() {
+        let htmlContent = '';
+        const data = JSON.parse(this.responseText);
+
+        if (data.response && data.response.docs && data.response.docs.length > 1) {
+            htmlContent =
+                '<ul>' +
+                    data.response.docs.map(article => `<li class="article">
+                        <h2><a href="${article.web_url}">${article.headline.main}</a></h2>
+                        <p>${article.snippet}</p>
+                    </li>`).join('') +
+                '</ul>';
+        } else {
+            htmlContent = '<div class="error-no-articles">No articles available</div>';
+        }
+
+        responseContainer.insertAdjacentHTML('beforeend', htmlContent);
+    }
 })();
