@@ -18,10 +18,9 @@
             }
         }).done(addImage);
 
-        const articleRequest = new XMLHttpRequest();
-        articleRequest.onload = addArticles;
-        articleRequest.open('GET', `http://api.nytimes.com/svc/search/v2/articlesearch.json?q=${searchedForText}&api-key=0b8fecc045a24ff9bba7454ff972d3bc`);
-        articleRequest.send();
+        $.ajax({
+            url: `http://api.nytimes.com/svc/search/v2/articlesearch.json?q=${searchedForText}&api-key=0b8fecc045a24ff9bba7454ff972d3bc`
+        }).done(addArticles);
     });
 
     function addImage(images) {
@@ -36,21 +35,20 @@
                     <img src="${image.urls.regular}" alt="${searchedForText}">
                     <figcaption>${searchedForText} by ${image.user.name}</figcaption>
                 </figure>`;
-
-            responseContainer.insertAdjacentHTML('afterbegin', htmlContent);
         } else {
             htmlContent = '<div class="error-no-image">No images available</div>';
         }
+
+        responseContainer.insertAdjacentHTML('afterbegin', htmlContent);
     }
 
-    function addArticles() {
+    function addArticles(articles) {
         let htmlContent = '';
-        const data = JSON.parse(this.responseText);
 
-        if (data.response && data.response.docs && data.response.docs.length > 1) {
+        if (articles.response && articles.response.docs && articles.response.docs.length > 1) {
             htmlContent =
                 '<ul>' +
-                    data.response.docs.map(article => `<li class="article">
+                    articles.response.docs.map(article => `<li class="article">
                         <h2><a href="${article.web_url}">${article.headline.main}</a></h2>
                         <p>${article.snippet}</p>
                     </li>`).join('') +
